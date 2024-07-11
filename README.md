@@ -2,7 +2,7 @@
 
 ## 介绍
 
-**天津博瑞皓科**
+**天津博瑞皓科 API**
 
 [官方文档](https://www.yuque.com/lingdutuandui)
 
