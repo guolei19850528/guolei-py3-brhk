@@ -1,5 +1,3 @@
-# guolei_py3_brhk
-
 ## 介绍
 
 **天津博瑞皓科 API**
