@@ -7,8 +7,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setup(
     name="guolei-py3-brhk",
-    version="0.0.1",
-    description="天津博瑞皓科 收款云音箱云喇叭API",
+    version="0.0.2",
+    description="天津博瑞皓科 API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/guolei19850528/guolei_py3_brhk",
