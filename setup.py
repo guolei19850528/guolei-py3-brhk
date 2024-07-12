@@ -18,6 +18,9 @@ setup(
     keywors=["brhk", "博瑞皓科", "天津博瑞皓科"],
     packages=setuptools.find_packages('./'),
     install_requires=[
+        "addict",
+        "retrying",
+        "pydantic",
         "guolei-py3-requests",
     ],
     python_requires='>=3.0',
