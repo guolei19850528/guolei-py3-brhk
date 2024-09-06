@@ -113,5 +113,5 @@ class Api(object):
         if response.status_code == 200:
             json_addict = Dict(response.json())
             if json_addict.errcode == 0 and json_addict.errmsg == "ok":
-                return True, response.status_code, json_addict.data
-        return False, response.status_code, Dict({})
+                return True, response, json_addict.data
+        return False, response, response.json()
