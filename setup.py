@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setup(
     name="guolei-py3-brhk",
-    version="1.0.5",
+    version="1.1.5",
     description="天津博瑞皓科 API",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -20,8 +20,8 @@ setup(
     install_requires=[
         "addict",
         "retrying",
-        "pydantic",
         "guolei-py3-requests",
+        "jsonschema",
     ],
     python_requires='>=3.0',
     zip_safe=False

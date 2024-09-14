@@ -14,6 +14,7 @@ from typing import Callable
 
 import requests
 from addict import Dict
+from jsonschema.validators import validate, Draft202012Validator
 
 
 class Api(object):
@@ -79,39 +80,45 @@ class Api(object):
     def notify(
             self,
             message: str = "",
-            requests_request_func_kwargs_url_path: str = "/notify.php",
-            requests_request_func_kwargs: dict = {},
-            requests_request_func_response_callable: Callable = None
+            request_func_kwargs: dict = {},
+            request_func_response_callable: Callable = None
     ):
         """
         @see https://www.yuque.com/lingdutuandui/ugcpag/umbzsd#yG8IS
         :param message:
-        :param requests_request_func_kwargs_url_path:
-        :param requests_request_func_kwargs:
-        :param requests_request_func_response_callable:
+        :param request_func_kwargs:
+        :param request_func_response_callable:
         :return:
         """
-        if not isinstance(message, str):
-            raise TypeError("message must be a string")
-        if not len(message):
-            raise ValueError("message must be a string and not be empty")
-        requests_request_func_kwargs = Dict(requests_request_func_kwargs)
-        requests_request_func_kwargs.setdefault("url", f"{self.base_url}{requests_request_func_kwargs_url_path}")
-        requests_request_func_kwargs.setdefault("method", "POST")
-        requests_request_func_kwargs.data = {
-            **{
-                "token": self.token,
-                "id": self.id,
-                "version": self.version,
-                "message": message.encode("utf-8"),
-            },
-            **requests_request_func_kwargs.data,
-        }
-        response = requests.request(**requests_request_func_kwargs.to_dict())
-        if isinstance(requests_request_func_response_callable, Callable):
-            return requests_request_func_response_callable(response, requests_request_func_kwargs.to_dict())
+        validate(instance=message, schema={"type": "string", "minLength": 1})
+        request_func_kwargs = Dict(request_func_kwargs)
+        request_func_kwargs.setdefault("url", f"{self.base_url}/notify.php")
+        request_func_kwargs.setdefault("method", "POST")
+        request_func_kwargs.setdefault("data", {})
+        request_func_kwargs.data.setdefault("token", self.token)
+        request_func_kwargs.data.setdefault("id", self.id)
+        request_func_kwargs.data.setdefault("version", self.version)
+        request_func_kwargs.data.setdefault("message", message.encode("utf-8"))
+        response = requests.request(**request_func_kwargs.to_dict())
+        if Draft202012Validator({"type": "boolean", "const": True}).is_valid(
+                isinstance(request_func_response_callable, Callable)):
+            return request_func_response_callable(response, request_func_kwargs)
         if response.status_code == 200:
-            json_addict = Dict(response.json())
-            if json_addict.errcode == 0 and json_addict.errmsg == "ok":
-                return True, response, json_addict.data
-        return False, response, response.json()
+            if Draft202012Validator(
+                    {
+                        "type": "object",
+                        "properties": {
+                            "errcode": {
+                                "oneOf": [
+                                    {"type": "integer", "const": 0},
+                                    {"type": "string", "const": "0"},
+                                ],
+                            },
+                            "errmsg": {
+                                {"type": "string", "enums": ["ok", "OK", "Ok", "oK"]},
+                            },
+                        },
+                    }
+            ).is_valid(response.json()):
+                return True
+        return False
