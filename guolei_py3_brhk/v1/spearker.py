@@ -96,7 +96,7 @@ class Api(object):
         request_func_kwargs = Dict(request_func_kwargs)
         request_func_kwargs.setdefault("url", f"{self.base_url}/notify.php")
         request_func_kwargs.setdefault("method", "POST")
-        request_func_kwargs.setdefault("data", {})
+        request_func_kwargs.setdefault("data", Dict())
         request_func_kwargs.data.setdefault("token", self.token)
         request_func_kwargs.data.setdefault("id", self.id)
         request_func_kwargs.data.setdefault("version", self.version)
