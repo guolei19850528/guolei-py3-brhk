@@ -91,6 +91,8 @@ class Api(object):
         :return:
         """
         validate(instance=message, schema={"type": "string", "minLength": 1})
+        if not Draft202012Validator({"type": "boolean", "const": True}).is_valid(isinstance(request_func_kwargs, dict)):
+            request_func_kwargs = {}
         request_func_kwargs = Dict(request_func_kwargs)
         request_func_kwargs.setdefault("url", f"{self.base_url}/notify.php")
         request_func_kwargs.setdefault("method", "POST")
