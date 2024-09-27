@@ -100,15 +100,11 @@ class Api(object):
         if not Draft202012Validator({"type": "string", "minLength": 1, "pattern": "^http"}).is_valid(url):
             url = f"/{url}" if not url.startswith("/") else url
             url = f"{self.base_url}{url}"
-        data = Dict(data) if isinstance(data, dict) else Dict()
-        data.setdefault("token", self.token)
-        data.setdefault("id", self.id)
-        data.setdefault("version", self.version)
         kwargs = Dict(kwargs) if isinstance(kwargs, dict) else Dict()
         response = requests.post(
             url=url,
             params=params,
-            data=data.to_dict(),
+            data=data,
             **kwargs.to_dict()
         )
         if isinstance(custom_callable, Callable):
@@ -124,7 +120,7 @@ class Api(object):
                             {"type": "string", "const": "0"},
                         ],
                     },
-                    "errmsg":{"type": "string", "enums": ["ok", "OK", "Ok", "oK"]}
+                    "errmsg": {"type": "string", "enums": ["ok", "OK", "Ok", "oK"]}
                 },
                 "required": ["errcode", "errmsg"]
             }).is_valid(json_addict):
@@ -153,10 +149,6 @@ class Api(object):
         if not Draft202012Validator({"type": "string", "minLength": 1, "pattern": "^http"}).is_valid(url):
             url = f"/{url}" if not url.startswith("/") else url
             url = f"{self.base_url}{url}"
-        data = Dict(data) if isinstance(data, dict) else Dict()
-        data.setdefault("token", self.token)
-        data.setdefault("id", self.id)
-        data.setdefault("version", self.version)
         kwargs = Dict(kwargs) if isinstance(kwargs, dict) else Dict()
         response = requests.request(
             method=method,
@@ -178,9 +170,22 @@ class Api(object):
                             {"type": "string", "const": "0"},
                         ],
                     },
-                    "errmsg":{"type": "string", "enums": ["ok", "OK", "Ok", "oK"]}
+                    "errmsg": {"type": "string", "enums": ["ok", "OK", "Ok", "oK"]}
                 },
                 "required": ["errcode", "errmsg"]
             }).is_valid(json_addict):
                 return True
         return False
+
+    def notify(
+            self,
+            url: str = ApiUrlSettings.URL__NOTIFY,
+            message: str = None,
+    ):
+        validate(instance=message, schema={"type": "string", "minLength": 1})
+        data = Dict({})
+        data.setdefault("token", self.token)
+        data.setdefault("id", self.id)
+        data.setdefault("version", self.version)
+        data.setdefault("message", message)
+        return self.post(url=url, data=data.to_dict())
