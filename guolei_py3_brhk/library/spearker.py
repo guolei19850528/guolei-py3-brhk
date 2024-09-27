@@ -179,7 +179,6 @@ class Api(object):
 
     def notify(
             self,
-            url: str = ApiUrlSettings.URL__NOTIFY,
             message: str = None,
     ):
         validate(instance=message, schema={"type": "string", "minLength": 1})
@@ -188,4 +187,4 @@ class Api(object):
         data.setdefault("id", self.id)
         data.setdefault("version", self.version)
         data.setdefault("message", message)
-        return self.post(url=url, data=data.to_dict())
+        return self.post(url=ApiUrlSettings.URL__NOTIFY, data=data.to_dict())
