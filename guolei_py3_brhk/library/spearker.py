@@ -160,6 +160,6 @@ class Api(object):
         data.setdefault("message", message)
         return self.post(
             response_callable=ResponseCallable.json_addict__errcode_is_0,
-            url=UrlsSetting.URL__NOTIFY,
+            url=UrlsSetting.NOTIFY,
             data=data.to_dict()
         )
