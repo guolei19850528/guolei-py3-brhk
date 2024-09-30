@@ -12,36 +12,24 @@ from typing import Callable, Any
 
 import requests
 from addict import Dict
-from guolei_py3_requests.library import ResponseCallable, request
 from jsonschema.validators import validate, Draft202012Validator
 from requests import Response
 
 
-class ResponseCallable(ResponseCallable):
+class ResponseCallable(object):
     """
     Response Callable Class
     """
 
     @staticmethod
-    def json_addict__errcode_is_0(response: Response = None, status_code: int = 200):
-        json_addict = ResponseCallable.json_addict(response=response, status_code=status_code)
-        if Draft202012Validator({
-            "type": "object",
-            "properties": {
-                "errcode": {
-                    "oneOf": [
-                        {"type": "integer", "const": 0},
-                        {"type": "string", "const": "0"},
-                    ],
-                },
-            },
-            "required": ["errcode"]
-        }).is_valid(json_addict):
+    def json_errcode_0(response: Response = None, status_code: int = 200):
+        json_data = response.json() if response.status_code == status_code else dict()
+        if int(json_data.get("errcode", -1)) == 0:
             return True
         return False
 
 
-class UrlsSetting:
+class UrlSetting(object):
     NOTIFY = "/notify.php"
 
 
@@ -106,60 +94,55 @@ class Api(object):
     def version(self, value):
         self._version = value
 
-    def post(
-            self,
-            response_callable: Callable = ResponseCallable.json_addict__errcode_is_0,
-            url: str = None,
-            params: Any = None,
-            data: Any = None,
-            json: Any = None,
-            headers: Any = None,
-            **kwargs: Any
-    ):
-        return self.request(
-            response_callable=response_callable,
-            method="POST",
-            url=url,
-            params=params,
-            data=data,
-            json=json,
-            headers=headers,
-            **kwargs
-        )
+    def post(self, on_response_callback: Callable = ResponseCallable.json_errcode_0, path: str = None, **kwargs):
+        """
+        execute post by requests.post
 
-    def request(
-            self,
-            response_callable: Callable = ResponseCallable.json_addict__errcode_is_0,
-            method: str = "GET",
-            url: str = None,
-            params: Any = None,
-            headers: Any = None,
-            **kwargs
-    ):
-        if not Draft202012Validator({"type": "string", "minLength": 1, "pattern": "^http"}).is_valid(url):
-            url = f"/{url}" if not url.startswith("/") else url
-            url = f"{self.base_url}{url}"
-        return request(
-            response_callable=response_callable,
-            method=method,
-            url=url,
-            params=params,
-            headers=headers,
-            **kwargs
-        )
+        :param on_response_callback: response callback
+        :param path: if url is None: url=f"{self.base_url}{path}"
+        :param kwargs: requests.get(**kwargs)
+        :return: on_response_callback(response) or response
+        """
+        path = kwargs.get("url", None) or f"{self.base_url}{path}"
+        kwargs.update([
+            ("url", path),
+        ])
+        response = requests.put(**kwargs)
+        if isinstance(on_response_callback, Callable):
+            return on_response_callback(response)
+        return response
+
+    def request(self, on_response_callback: Callable = ResponseCallable.json_errcode_0, path: str = None,
+                **kwargs):
+        """
+        execute request by requests.request
+
+        :param on_response_callback: response callback
+        :param path: if url is None: url=f"{self.base_url}{path}"
+        :param kwargs: requests.get(**kwargs)
+        :return: on_response_callback(response) or response
+        """
+        path = kwargs.get("url", None) or f"{self.base_url}{path}"
+        kwargs.update([
+            ("url", path),
+        ])
+        response = requests.request(**kwargs)
+        if isinstance(on_response_callback, Callable):
+            return on_response_callback(response)
+        return response
 
     def notify(
             self,
             message: str = None,
     ):
-        validate(instance=message, schema={"type": "string", "minLength": 1})
+
         data = Dict({})
         data.setdefault("token", self.token)
         data.setdefault("id", self.id)
         data.setdefault("version", self.version)
         data.setdefault("message", message)
         return self.post(
-            response_callable=ResponseCallable.json_addict__errcode_is_0,
-            url=UrlsSetting.NOTIFY,
+            on_response_callback=ResponseCallable.json_addict__errcode_is_0,
+            path=UrlSetting.NOTIFY,
             data=data.to_dict()
         )
