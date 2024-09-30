@@ -8,11 +8,9 @@ Email：[174000902@qq.com]
 Github：https://github.com/guolei19850528/guolei_py3_brhk
 =================================================
 """
-from typing import Callable, Any
+from typing import Callable
 
 import requests
-from addict import Dict
-from jsonschema.validators import validate, Draft202012Validator
 from requests import Response
 
 
@@ -135,14 +133,19 @@ class Api(object):
             self,
             message: str = None,
     ):
+        """
+        notify
 
-        data = Dict({})
+        @see https://www.yuque.com/lingdutuandui/ugcpag/umbzsd#yG8IS
+        :param message:
+        :return:
+        """
+        data = dict()
         data.setdefault("token", self.token)
         data.setdefault("id", self.id)
         data.setdefault("version", self.version)
         data.setdefault("message", message)
         return self.post(
-            on_response_callback=ResponseCallable.json_addict__errcode_is_0,
             path=UrlSetting.NOTIFY,
-            data=data.to_dict()
+            data=data
         )
