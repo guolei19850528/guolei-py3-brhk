@@ -105,7 +105,7 @@ class Api(object):
         kwargs.update([
             ("url", path),
         ])
-        response = requests.put(**kwargs)
+        response = requests.post(**kwargs)
         if isinstance(on_response_callback, Callable):
             return on_response_callback(response)
         return response
