@@ -62,6 +62,7 @@ class Api(Request):
         :param id:
         :param version:
         """
+        super().__init__()
         self._base_url = base_url
         self._token = token
         self._id = id
