@@ -11,10 +11,11 @@ Github：https://github.com/guolei19850528/guolei_py3_brhk
 from typing import Callable
 
 import requests
+from guolei_py3_requests.library import ResponseCallback
 from requests import Response
 
 
-class ResponseCallable(object):
+class ResponseCallback(ResponseCallback):
     """
     Response Callable Class
     """
