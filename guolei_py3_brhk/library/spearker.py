@@ -11,7 +11,8 @@ Github：https://github.com/guolei19850528/guolei_py3_brhk
 from typing import Callable
 
 import requests
-from guolei_py3_requests.library import ResponseCallback
+from guolei_py3_requests.library import ResponseCallback, Request
+from jsonschema.validators import Draft202012Validator
 from requests import Response
 
 
@@ -22,17 +23,26 @@ class ResponseCallback(ResponseCallback):
 
     @staticmethod
     def json_errcode_0(response: Response = None, status_code: int = 200):
-        json_data = response.json() if response.status_code == status_code else dict()
-        if int(json_data.get("errcode", -1)) == 0:
-            return True
-        return False
+        json_addict = ResponseCallback.json_addict(response=response, status_code=status_code)
+        return Draft202012Validator({
+            "type": "object",
+            "properties": {
+                "errcode": {
+                    "oneOf": [
+                        {"type": "integer", "const": 0},
+                        {"type": "string", "const": "0"},
+                    ]
+                }
+            },
+            "required": ["errcode"]
+        }).is_valid(json_addict)
 
 
 class UrlSetting(object):
     NOTIFY = "/notify.php"
 
 
-class Api(object):
+class Api(Request):
     """
     博瑞皓科 Speaker Api Class
     @see https://www.yuque.com/lingdutuandui/ugcpag/umbzsd#yG8IS
@@ -93,43 +103,6 @@ class Api(object):
     def version(self, value):
         self._version = value
 
-    def post(self, on_response_callback: Callable = ResponseCallable.json_errcode_0, path: str = None, **kwargs):
-        """
-        execute post by requests.post
-
-        :param on_response_callback: response callback
-        :param path: if url is None: url=f"{self.base_url}{path}"
-        :param kwargs: requests.get(**kwargs)
-        :return: on_response_callback(response) or response
-        """
-        path = kwargs.get("url", None) or f"{self.base_url}{path}"
-        kwargs.update([
-            ("url", path),
-        ])
-        response = requests.post(**kwargs)
-        if isinstance(on_response_callback, Callable):
-            return on_response_callback(response)
-        return response
-
-    def request(self, on_response_callback: Callable = ResponseCallable.json_errcode_0, path: str = None,
-                **kwargs):
-        """
-        execute request by requests.request
-
-        :param on_response_callback: response callback
-        :param path: if url is None: url=f"{self.base_url}{path}"
-        :param kwargs: requests.get(**kwargs)
-        :return: on_response_callback(response) or response
-        """
-        path = kwargs.get("url", None) or f"{self.base_url}{path}"
-        kwargs.update([
-            ("url", path),
-        ])
-        response = requests.request(**kwargs)
-        if isinstance(on_response_callback, Callable):
-            return on_response_callback(response)
-        return response
-
     def notify(
             self,
             message: str = None,
@@ -147,6 +120,7 @@ class Api(object):
         data.setdefault("version", self.version)
         data.setdefault("message", message)
         return self.post(
-            path=UrlSetting.NOTIFY,
+            on_response_callback=ResponseCallback.json_errcode_0,
+            url=f"{self.base_url}{UrlSetting.NOTIFY}",
             data=data
         )
